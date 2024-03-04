@@ -8,21 +8,23 @@ import re
 
 import time
 
-# bet = int(input('Введите разницу между ставками (просто число, без %)'))
-bet = 10
-# from_ = input('Введите пункт отправки')
-from_ = "вологда"
-# to_ = input('Введите пункт доставки')
-to_ = "москва"
-# weight = input('Введите вес (просто число, без т.)')
-weight = 10
+bet = int(input('Введите разницу между ставками (просто число, без %)'))
+# bet = 10
+from_ = input('Введите пункт отправки')
+# from_ = "вологда"
+to_ = input('Введите пункт доставки')
+# to_ = "москва"
+weight = input('Введите вес (просто число, без т.)')
+# weight = 10
 
 options = webdriver.ChromeOptions()
 options.add_argument("--start-maximized")
 
 with open(f'Результат_{from_}_{to_}_ставка={bet}_вес={weight}.csv', 'w', newline='', encoding='utf-8-sig') as file:
     writer = csv.writer(file, delimiter=';')
-    writer.writerow(['Ставка с НДС', 'Ставка без НДС', 'Заданная разница %', 'Разница между ставками в %', 'Контакты'])
+    writer.writerow(
+        ['Ставка с НДС', 'Ставка без НДС', 'Заданная разница %', 'Разница между ставками в %', 'Контакты', 'АТИ код',
+         'Профиль компании'])
 
 
 def login_func(browser):
@@ -129,13 +131,18 @@ with webdriver.Chrome(options) as browser:
                     if i[0] == '+':
                         number += i
                         number += '\n'
-                number='"'+number+'"'
+                number = '"' + number + '"'
+                ati_code_pattern = r'(#[A-Z0-9]+)'
+                ati_code = re.findall(ati_code_pattern, block.text)[0]
+                company_profile = block.text.split('Отправить встречное')[1].split('Написать')[0]
+                print(block.text)
                 difference = str(difference).replace('.', ',') + '%'
                 str_bet = str(bet) + '%'
-                with open(f'Результат_{from_}_{to_}_ставка={bet}_вес={weight}.csv', 'a', newline='', encoding='utf-8-sig') as file:
+                with open(f'Результат_{from_}_{to_}_ставка={bet}_вес={weight}.csv', 'a', newline='',
+                          encoding='utf-8-sig') as file:
                     writer = csv.writer(file, delimiter=';')
                     writer.writerow(
-                        [sNDS, bezNDS, str_bet, difference, number])
+                        [sNDS, bezNDS, str_bet, difference, number, ati_code, company_profile])
                 count += 1
         next_page.click()
         time.sleep(2)
