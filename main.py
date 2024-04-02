@@ -77,7 +77,7 @@ with webdriver.Chrome(options) as browser:
     fing_cargos(browser)
     time.sleep(5)
     try:
-        max_page = int(browser.find_element(By.CLASS_NAME, 'total-index_kjYkG').text)
+        max_page = int(browser.find_element(By.CLASS_NAME, 'total-index_kjYkG').text.replace(' ',''))
     except:
         max_page = 1
     next_page = browser.find_element(By.CSS_SELECTOR, 'button.next_FJXnH')
@@ -114,7 +114,10 @@ with webdriver.Chrome(options) as browser:
                 bezNDS = int(bezNDS[::-1].replace(' ', ''))
             except:
                 continue
-            difference = (sNDS - bezNDS) / (bezNDS / 100)
+            try:
+                difference = (sNDS - bezNDS) / (bezNDS / 100)
+            except:
+                continue
             difference = round(difference, 2)
             if difference > bet:
                 cargo = True
@@ -132,17 +135,24 @@ with webdriver.Chrome(options) as browser:
                         number += i
                         number += '\n'
                 number = '"' + number + '"'
-                ati_code_pattern = r'(#[A-Z0-9]+)'
-                ati_code = re.findall(ati_code_pattern, block.text)[0]
-                company_profile = block.text.split('Отправить встречное')[1].split('Написать')[0]
-                print(block.text)
+                ati_code_pattern = r'Код:\s*(\d+),'
+                try:
+                    ati_code = re.findall(ati_code_pattern, block.text)[0]
+                except:
+                    ati_code = ' - '
                 difference = str(difference).replace('.', ',') + '%'
                 str_bet = str(bet) + '%'
+                profile_type=''
+                profile_types=['гр/вл.-пер', 'эксп-перев', 'грузовл.', 'дисп.', 'эксп.']
+                for i in profile_types:
+                    if i in block.text:
+                        profile_type=i
+                        break
                 with open(f'Результат_{from_}_{to_}_ставка={bet}_вес={weight}.csv', 'a', newline='',
                           encoding='utf-8-sig') as file:
                     writer = csv.writer(file, delimiter=';')
                     writer.writerow(
-                        [sNDS, bezNDS, str_bet, difference, number, ati_code, company_profile])
+                        [sNDS, bezNDS, str_bet, difference, number, ati_code, profile_type])
                 count += 1
         next_page.click()
         time.sleep(2)
